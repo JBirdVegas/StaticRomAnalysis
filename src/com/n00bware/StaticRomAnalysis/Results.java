@@ -2,55 +2,65 @@ package com.n00bware.StaticRomAnalysis;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
 public class Results extends Activity {
     String  TAG   = getClass().getSimpleName();
     boolean DEBUG = true;
+    Button mSendEmail;
     TextView mRomName;
     TextView mStaticResults;
     Class   settingsProviderClass      = null;
     Class[] systemClassDeclaredClasses = null;
     Context mContext;
+    String mLineEndings = System.getProperty("line.separator");
 
     /**
      * Called when the activity is first created.
      */
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
         setContentView(R.layout.main);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layout);
         mRomName = (TextView) layout.findViewById(R.id.rom_name);
         mStaticResults = (TextView) layout.findViewById(R.id.results);
+        mSendEmail = (Button) layout.findViewById(R.id.send_email_button);
+        mSendEmail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendEmail();
+            }
+        });
         mRomName.setText(null);
         mStaticResults.setText(null);
         try {
             settingsProviderClass = Class.forName("android.provider.Settings");
             systemClassDeclaredClasses = settingsProviderClass.getDeclaredClasses();
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             // shit!!!
         }
         mRomName.setText(getBestName());
         mStaticResults.setText(Integer.toString(getDeclaredFields().size()));
-
     }
 
-    public List<String> getDeclaredFields()
-    {
+    private List<String> getDeclaredFields() {
         List<String> returnList = new ArrayList<String>(0);
         for (Class foundClasses : systemClassDeclaredClasses) {
             // get all the fields
@@ -88,8 +98,7 @@ public class Results extends Activity {
         return returnList;
     }
 
-    public String findBuildPropValueOf(Context mContext, String prop)
-    {
+    private String findBuildPropValueOf(Context mContext, String prop) {
         String mBuildPath = mContext.getString(R.string.buildprop_path);
         String value = null;
         try {
@@ -99,24 +108,20 @@ public class Results extends Activity {
             //get the property
             value = mProps.getProperty(prop, null);
             Log.d(TAG, String.format(mContext.getString(R.string.log_found_build_prop_value), prop, value));
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             Log.d(TAG, mContext.getString(R.string.inputstream_load_failure));
-        }
-        catch (NullPointerException npe) {
+        } catch (NullPointerException npe) {
             npe.getMessage();
         }
 
         if (value != null) {
             return value;
-        }
-        else {
+        } else {
             return null;
         }
     }
 
-    public String getBestName()
-    {
+    private String getBestName() {
         ArrayList<String> checkOptions = new ArrayList<String>(0);
         checkOptions.add(findBuildPropValueOf(mContext, "ro.modversion")); // most prefered
         checkOptions.add(findBuildPropValueOf(mContext, "ro.goo.rom"));
@@ -131,8 +136,44 @@ public class Results extends Activity {
         return "Failed to find ROM name";
     }
 
-    public String stringWithoutSpaces(String string)
-    {
+    private String stringWithoutSpaces(String string) {
         return string.replaceAll(" ", "_").replaceAll(":", "").trim();
+    }
+
+    private void sendEmail() {
+        // from http://stackoverflow.com/a/1279574/873237
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setType("plain/text");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] { "testn00bware.staticromanalysis@gmail.com" });
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, getClass().getCanonicalName() + "_TEST_RESULTS");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, formulateResultsForEmail());
+        Log.v(getClass().getSimpleName(), "message=" + formulateResultsForEmail());
+        startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+    }
+
+    private String formulateResultsForEmail() {
+        StringBuilder stringBuilder = new StringBuilder(0);
+        stringBuilder.append("ROM nomenclature values found: " + mLineEndings);
+        stringBuilder.append(mLineEndings);
+        stringBuilder.append("ro.modversion: " + findBuildPropValueOf(mContext, "ro.modversion")); // most prefered
+        stringBuilder.append(mLineEndings);
+        stringBuilder.append("ro.goo.rom: " + findBuildPropValueOf(mContext, "ro.goo.rom"));
+        stringBuilder.append(mLineEndings);
+        stringBuilder.append("ro.goo.developerid: " + findBuildPropValueOf(mContext, "ro.goo.developerid"));
+        stringBuilder.append(mLineEndings);
+        stringBuilder.append("ro.rommanager.developerid: " + findBuildPropValueOf(mContext, "ro.rommanager.developerid"));
+        stringBuilder.append(mLineEndings);
+        stringBuilder.append("ro.build.display.id: " + findBuildPropValueOf(mContext, "ro.build.display.id")); // least prefered
+        stringBuilder.append(mLineEndings + mLineEndings);
+
+        stringBuilder.append("Fields found: " + getDeclaredFields().size());
+        stringBuilder.append("Fields list:");
+            for (String key : getDeclaredFields()) {
+                stringBuilder.append(key + mLineEndings);
+            }
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        stringBuilder.append(mLineEndings + mLineEndings + "RESULTS SENT: "
+            + simpleDateFormat.format(new Date(System.currentTimeMillis())));
+        return stringBuilder.toString();
     }
 }

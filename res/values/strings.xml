@@ -6,5 +6,5 @@
     <string name="log_found_build_prop_value" formatted="false">
         findBuildPropValueOf found {%s} with the value (%s)
     </string>
-    <string name="inputstream_load_failure">failed to load input stream</string><string name="elements_in_provider">elements in the SettingProvider</string>
+    <string name="inputstream_load_failure">failed to load input stream</string><string name="elements_in_provider">elements in the SettingProvider</string><string name="send_results_button">Send Results via Email</string>
 </resources>
