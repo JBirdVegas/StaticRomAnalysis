@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StaticRomAnalysis</string><string name="results_text">Your ROM:</string>
+    <string name="unique_results">contains unique static members in the SettingsProvider in fact it contains:</string>
+    <string name="buildprop_path">/system/build.prop</string>
+    <string name="log_found_build_prop_value" formatted="false">
+        findBuildPropValueOf found {%s} with the value (%s)
+    </string>
+    <string name="inputstream_load_failure">failed to load input stream</string><string name="elements_in_provider">elements in the SettingProvider</string>
+</resources>
