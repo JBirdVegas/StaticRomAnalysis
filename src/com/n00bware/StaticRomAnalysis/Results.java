@@ -3,6 +3,7 @@ package com.n00bware.StaticRomAnalysis;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -21,6 +22,8 @@ import java.util.Properties;
 
 public class Results extends Activity {
     String  TAG   = getClass().getSimpleName();
+    String VERSION_NAME;
+    int VERSION_CODE;
     boolean DEBUG = true;
     Button mSendEmail;
     TextView mRomName;
@@ -37,6 +40,14 @@ public class Results extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getApplicationContext();
+        try {
+            VERSION_NAME = this.getPackageManager()
+                .getPackageInfo(this.getPackageName(), 0).versionName;
+            VERSION_CODE = this.getPackageManager()
+                .getPackageInfo(this.getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
         setContentView(R.layout.main);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layout);
         mRomName = (TextView) layout.findViewById(R.id.rom_name);
@@ -166,14 +177,16 @@ public class Results extends Activity {
         stringBuilder.append("ro.build.display.id: " + findBuildPropValueOf(mContext, "ro.build.display.id")); // least prefered
         stringBuilder.append(mLineEndings + mLineEndings);
 
-        stringBuilder.append("Fields found: " + getDeclaredFields().size());
-        stringBuilder.append("Fields list:");
+        stringBuilder.append("Fields found: " + getDeclaredFields().size() + mLineEndings);
+        stringBuilder.append("Fields list:" + mLineEndings);
             for (String key : getDeclaredFields()) {
                 stringBuilder.append(key + mLineEndings);
             }
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
         stringBuilder.append(mLineEndings + mLineEndings + "RESULTS SENT: "
             + simpleDateFormat.format(new Date(System.currentTimeMillis())));
+        stringBuilder.append(mLineEndings);
+        stringBuilder.append("version { " + VERSION_CODE + ", " + VERSION_NAME + " }");
         return stringBuilder.toString();
     }
 }

@@ -12,6 +12,7 @@
 bin/
 gen/
 out/
+progaurd_logs/
 .idea/
 # Local configuration file (sdk path, etc)
 local.properties
