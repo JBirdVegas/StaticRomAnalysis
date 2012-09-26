@@ -32,6 +32,7 @@ public class Results extends Activity {
     Class[] systemClassDeclaredClasses = null;
     Context mContext;
     String mLineEndings = System.getProperty("line.separator");
+    List<StackTraceElement[]> mStackTraceElements;
 
     /**
      * Called when the activity is first created.
@@ -39,6 +40,7 @@ public class Results extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mStackTraceElements = new ArrayList<StackTraceElement[]>(0);
         mContext = getApplicationContext();
         try {
             VERSION_NAME = this.getPackageManager()
@@ -47,6 +49,7 @@ public class Results extends Activity {
                 .getPackageInfo(this.getPackageName(), 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
+            mStackTraceElements.add(e.getStackTrace());
         }
         setContentView(R.layout.main);
         LinearLayout layout = (LinearLayout) findViewById(R.id.layout);
@@ -66,6 +69,8 @@ public class Results extends Activity {
             systemClassDeclaredClasses = settingsProviderClass.getDeclaredClasses();
         } catch (ClassNotFoundException e) {
             // shit!!!
+            e.printStackTrace();
+            mStackTraceElements.add(e.getStackTrace());
         }
         mRomName.setText(getBestName());
         mStaticResults.setText(Integer.toString(getDeclaredFields().size()));
@@ -121,8 +126,9 @@ public class Results extends Activity {
             Log.d(TAG, String.format(mContext.getString(R.string.log_found_build_prop_value), prop, value));
         } catch (IOException ioe) {
             Log.d(TAG, mContext.getString(R.string.inputstream_load_failure));
+            mStackTraceElements.add(ioe.getStackTrace());
         } catch (NullPointerException npe) {
-            npe.getMessage();
+            mStackTraceElements.add(npe.getStackTrace());
         }
 
         if (value != null) {
@@ -187,6 +193,32 @@ public class Results extends Activity {
             + simpleDateFormat.format(new Date(System.currentTimeMillis())));
         stringBuilder.append(mLineEndings);
         stringBuilder.append("version { " + VERSION_CODE + ", " + VERSION_NAME + " }");
+        if (mStackTraceElements.size() > 0) {
+            stringBuilder.append(mLineEndings + mLineEndings);
+            stringBuilder.append(formatErrorsForReporting());
+        } else {
+            stringBuilder.append(mLineEndings);
+            stringBuilder.append("No exceptions were thrown during the evaluation!");
+        }
         return stringBuilder.toString();
+    }
+
+    private String formatErrorsForReporting() {
+        StringBuilder returnString = new StringBuilder(0);
+        returnString.append("!!!Errors encountered!!!" + mLineEndings);
+        int arraySize = mStackTraceElements.size();
+        for (int count = 0; arraySize > count; count++) {
+            StackTraceElement[] stackTraceArray = mStackTraceElements.get(count);
+            int traceElementSize = stackTraceArray.length;
+            for (int i = 0; traceElementSize > i; i++) {
+                StackTraceElement element = stackTraceArray[i];
+                returnString.append("class: " + element.getClassName() + mLineEndings);
+                returnString.append("method: " + element.getMethodName() + mLineEndings);
+                returnString.append("line: " + element.getLineNumber() + mLineEndings);
+                returnString.append(mLineEndings);
+                returnString.append("toString() report: " + element.toString());
+            }
+        }
+        return returnString.toString();
     }
 }

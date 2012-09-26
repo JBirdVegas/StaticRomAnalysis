@@ -6,17 +6,15 @@
         android:id="@+id/layout"
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical">
-    <Space
-            android:layout_width="20px"
-            android:layout_height="30px"
-            android:id="@+id/space1" android:layout_gravity="center"/>
+
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/results_text"
             android:id="@+id/title"
             android:layout_centerHorizontal="true"
-            android:layout_gravity="center_horizontal"/>
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="30dp"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -26,6 +24,7 @@
             android:layout_centerHorizontal="true"
             android:layout_gravity="center_horizontal"/>
     <TextView
+            android:paddingTop="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/unique_results"
@@ -45,14 +44,13 @@
             android:text="@string/elements_in_provider"
             android:id="@+id/textView"
             android:layout_centerHorizontal="true"
-            android:layout_gravity="center_horizontal"/>
-    <Space
-            android:layout_width="20px"
-            android:layout_height="20px"
-            android:id="@+id/space" android:layout_gravity="center"/>
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp"/>
+
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/send_results_button"
-            android:id="@+id/send_email_button" android:layout_gravity="center"/>
+            android:id="@+id/send_email_button" android:layout_gravity="center"
+            android:layout_marginTop="30dp"/>
 </LinearLayout>
